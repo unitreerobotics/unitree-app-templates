@@ -1,0 +1,16 @@
+version: v0.1.0
+base_image: nginx:latest
+prebuild:
+  commands:
+    - pip3 install pyyaml
+permissions:
+  - camera
+  - motor
+port_mapping:
+  - "8088:80"
+startup_commands:
+  - bash -c "echo '<h1>Hello world!</h1>' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"
+change_log: |
+  - 初始版本发布
+  - 添加了基本的前端页面
+  - 支持自动化部署和配置
