@@ -7,4 +7,4 @@ build
 *.log
 app_tmp
 out
-pruduction
+production

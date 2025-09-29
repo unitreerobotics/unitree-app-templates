@@ -66,18 +66,18 @@ change_log: |
 ```bash
 # 编译命令行程序
 cd ./control
-mkdir build && cd build && cmake .. && make -j4 && cd ../../
+mkdir -p build && cd build && cmake .. && make -j4 && cd ../../
 
-mkdir production
+mkdir -p production/app
 
 # 拷贝您的命令行程序到 app 目录
-cp ./control/build/cmd ./production/app/cmd
+cp ./control/build/cmd ./production/app/
 
 # 拷贝您的接口服务程序到 app 目录
-cp -r server ./production/app/server
+cp -r ./server ./production/app/
 
 # 拷贝 UI 到 production 目录
-cp -r ./ui ./production/ui
+cp -r ./ui ./production/
 
 # 打包
 tar -czvf your_app_name.tar.gz ./production/app ./production/ui
