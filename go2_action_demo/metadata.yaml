@@ -1,0 +1,11 @@
+version: v0.1.0
+base_image: image/python_sdk2:latest
+permissions:
+  - camera
+  - motor
+startup_commands:
+  - bash -c "python3 /workspace/app/main.py"
+change_log: |
+  - 初始版本发布
+  - 添加了基本的前端页面
+  - 支持自动化部署和配置

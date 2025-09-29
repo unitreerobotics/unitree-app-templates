@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SDK 控制面板</title>
+  <style>
+    body{font-family: Arial, Helvetica, sans-serif; padding:20px; background:#f5f7fb}
+    .row{display:flex; gap:8px; align-items:center; margin-bottom:10px}
+    input[type=text]{flex:1; padding:8px; border-radius:6px; border:1px solid #ddd}
+    button{padding:8px 12px; margin:10px;border-radius:6px; border:none; background:#0a84ff; color:#fff; cursor:pointer}
+    button.secondary{background:#444}
+    #buttons{margin-top:12px}
+    .btn-row{display:inline-block; margin:16px 18px 16px 0;}
+    pre#log{background:#111; color:#0f0; padding:12px; border-radius:6px; height:220px; overflow:auto}
+  </style>
+</head>
+<body>
+  <h2>SDK 动作控制</h2>
+  <div class="row">
+    <input id="baseUrl" type="text" placeholder="http://172.16.9.224:9400" />
+    <button id="saveBtn">保存</button>
+    <button id="reloadBtn" class="secondary">加载动作</button>
+  </div>
+
+  <div id="buttons">正在加载动作...</div>
+
+  <h3>响应 / 日志</h3>
+  <pre id="log">空</pre>
+
+  <script>
+    const baseInput = document.getElementById('baseUrl');
+    const saveBtn = document.getElementById('saveBtn');
+    const reloadBtn = document.getElementById('reloadBtn');
+    const buttonsDiv = document.getElementById('buttons');
+    const log = document.getElementById('log');
+
+    function appendLog(text){
+      const t = (new Date()).toLocaleTimeString() + '  ' + text + '\n';
+      if(log.textContent === '空') log.textContent = '';
+      log.textContent = t + log.textContent;
+    }
+
+    function getBase(){
+      return (baseInput.value || localStorage.getItem('sdk_base');
+    }
+
+    saveBtn.addEventListener('click', ()=>{
+      localStorage.setItem('sdk_base', baseInput.value);
+      appendLog('已保存 base: ' + baseInput.value);
+    });
+
+    reloadBtn.addEventListener('click', loadOptions);
+
+    async function loadOptions(){
+      const base = getBase();
+      buttonsDiv.innerHTML = '加载中...';
+      try{
+        const res = await fetch(base + '/api/options');
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        renderButtons(data.options || []);
+        appendLog('Loaded ' + (data.options||[]).length + ' options from ' + base);
+      }catch(e){
+        buttonsDiv.innerHTML = '';
+        appendLog('加载失败: ' + e);
+        const hint = document.createElement('div');
+        hint.textContent = '加载失败：请检查服务地址与 CORS 设置';
+        hint.style.color = 'red';
+        buttonsDiv.appendChild(hint);
+      }
+    }
+
+    function renderButtons(options){
+      buttonsDiv.innerHTML = '';
+      if(!options || options.length===0){ buttonsDiv.textContent = '没有可用动作'; return }
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt.name + ' (' + opt.id + ')';
+        btn.dataset.id = opt.id;
+        btn.addEventListener('click', () => execute(opt.id, btn));
+        buttonsDiv.appendChild(btn);
+      })
+    }
+
+    async function execute(id, btn){
+      const base = getBase();
+      const prev = btn.textContent;
+      btn.textContent = '执行中...';
+      btn.disabled = true;
+      try{
+        const res = await fetch(base + '/api/execute', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({id: Number(id)})
+        });
+        const text = await res.text();
+        appendLog('执行 id=' + id + ' -> ' + res.status + ' ' + text);
+      }catch(e){
+        appendLog('请求失败 id=' + id + ' : ' + e);
+      }finally{
+        btn.disabled = false;
+        btn.textContent = prev;
+      }
+    }
+
+    // initialize
+    (function(){
+      baseInput.value = localStorage.getItem('sdk_base');
+      loadOptions();
+    })();
+  </script>
+</body>
+</html>
