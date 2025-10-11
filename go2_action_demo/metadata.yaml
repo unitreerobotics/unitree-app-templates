@@ -4,7 +4,9 @@ permissions:
   - camera
   - motor
 startup_commands:
-  - bash -c "python3 /workspace/app/main.py"
+  - python3 /workspace/app/main.py
+build_env:
+  - sed -i 's/, *b2//g' /usr/local/lib/python3.12/site-packages/unitree_sdk2py/__init__.py
 change_log: |
   - 初始版本发布
   - 添加了基本的前端页面
