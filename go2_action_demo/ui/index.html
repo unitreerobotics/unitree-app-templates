@@ -17,9 +17,7 @@
 </head>
 <body>
   <h2>SDK 动作控制</h2>
-  <div class="row">
-    <input id="baseUrl" type="text" placeholder="http://172.16.9.224:9400" />
-    <button id="saveBtn">保存</button>
+  <div class="row"> 
     <button id="reloadBtn" class="secondary">加载动作</button>
   </div>
 
@@ -30,10 +28,10 @@
 
   <script>
     const baseInput = document.getElementById('baseUrl');
-    const saveBtn = document.getElementById('saveBtn');
     const reloadBtn = document.getElementById('reloadBtn');
     const buttonsDiv = document.getElementById('buttons');
     const log = document.getElementById('log');
+    let CONFIG = {};
 
     function appendLog(text){
       const t = (new Date()).toLocaleTimeString() + '  ' + text + '\n';
@@ -41,14 +39,19 @@
       log.textContent = t + log.textContent;
     }
 
-    function getBase(){
-      return (baseInput.value || localStorage.getItem('sdk_base');
+    async function loadConfig() {
+        try {
+            const res = await fetch("config.json");
+            if (!res.ok) throw new Error('Failed to load config.json (HTTP ' + res.status + ')');
+            CONFIG = await res.json();
+            appendLog('配置加载成功: ' + (CONFIG.appUrl ? 'appUrl: ' + CONFIG.appUrl : 'appUrl未配置'));
+        } catch (e) {
+            appendLog('配置加载失败: ' + e.message);
+        }
     }
-
-    saveBtn.addEventListener('click', ()=>{
-      localStorage.setItem('sdk_base', baseInput.value);
-      appendLog('已保存 base: ' + baseInput.value);
-    });
+    function getBase(){
+      return CONFIG.appUrl;
+    }
 
     reloadBtn.addEventListener('click', loadOptions);
 
@@ -103,12 +106,11 @@
         btn.textContent = prev;
       }
     }
-
-    // initialize
-    (function(){
-      baseInput.value = localStorage.getItem('sdk_base');
-      loadOptions();
-    })();
+ 
+    (async function() {
+        await loadConfig(); 
+        await loadOptions();  
+        })();
   </script>
 </body>
 </html>

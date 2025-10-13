@@ -73,7 +73,7 @@ def get_image(w: Optional[int] = Query(None), q: int = Query(70, ge=10, le=95)):
         return Response(f'camera error: {e}', status_code=500, media_type='text/plain')
 
     if code != 0 or not data:
-        return Response('no image', status_code=500, media_type='text/plain')
+        return Response('no image' + str(code), status_code=500, media_type='text/plain')
 
     img_bytes = bytes(data)
 
