@@ -3,7 +3,7 @@
 	"dockerComposeFile": [
 		"docker-compose.yml"
 	],
-	"service": "devcontainer-template",
+	"service": "devcontainer-template-g1-walk-demo",
 	"workspaceFolder": "/workspace",
 	"customizations": {
 		"vscode": {

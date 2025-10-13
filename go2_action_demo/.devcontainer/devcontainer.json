@@ -3,7 +3,7 @@
 	"dockerComposeFile": [
 		"docker-compose.yml"
 	],
-	"service": "devcontainer-template",
+	"service": "devcontainer-template-go2-action-demo",
 	"workspaceFolder": "/workspace",
 	"customizations": {
 		"vscode": {

@@ -36,8 +36,8 @@ def start_realtime(cmd_args):
 
 
 def send_input_realtime(cmd_args):
+    global realtime_proc
     if REALTIME:
-        global realtime_proc
         if not realtime_proc or realtime_proc.poll() is not None:
             start_realtime(cmd_args)
 
@@ -47,7 +47,6 @@ def send_input_realtime(cmd_args):
             realtime_proc.stdin.flush() 
             time.sleep(0.01) 
     else: 
-        global realtime_proc
         if not realtime_proc or realtime_proc.poll() is not None:
             start_realtime(cmd_args)
         realtime_proc.stdin.write("\n".join(cmd_args) + "\n")
