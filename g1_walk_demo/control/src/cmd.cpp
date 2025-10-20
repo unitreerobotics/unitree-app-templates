@@ -1,5 +1,5 @@
 #include "functions.hpp"
-
+#include <thread>
 static int runArmAction(int id) {
   std::string msg;
   int ret = RunG1ArmAction(id, msg);
@@ -9,6 +9,8 @@ static int runArmAction(int id) {
 
 static int runLocoCmd(const std::string &cmd, const std::string &val) {
   auto client = initClient("");
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
   executeCommand(client, cmd, val);
   std::cout << "[OK] loco_command: " << cmd << " " << val << std::endl;
   return 0;
@@ -36,6 +38,8 @@ int main(int argc, char* argv[]) {
       std::ostringstream oss;
       oss << argv[2] << " " << argv[3] << " " << argv[4];
       return runLocoCmd("move", oss.str());
+    }else if (cmd == "damp" ||cmd == "start" || cmd == "stand" || cmd == "squat" ) {
+      return runLocoCmd(cmd, "");
     } else {
       std::cerr << "参数错误或未知命令\n";
       return 1;

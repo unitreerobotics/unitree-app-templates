@@ -9,7 +9,7 @@ build_env:
   - apt update && apt install -y python3 pip && pip install fastapi uvicorn -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 startup_commands:
-  - python3 /workspace/app/cmd_server.py
+  - python3 /workspace/app/server/cmd_server.py
 
 change_log: |
   - 初始版本发布

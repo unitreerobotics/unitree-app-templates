@@ -80,7 +80,8 @@ cp -r ./server ./production/app/
 cp -r ./ui ./production/
 
 # 打包
-tar -czvf your_app_name.tar.gz ./production/app ./production/ui
+cd ./production
+tar -czvf your_app_name.tar.gz app ui
 ```
 
 之后将应用上传到 App Store 即可。

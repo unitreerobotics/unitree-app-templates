@@ -74,7 +74,7 @@ std::shared_ptr<LocoClient> initClient(const std::string &network_interface = "l
   unitree::robot::ChannelFactory::Instance()->Init(0, network_interface);
   auto client = std::make_shared<LocoClient>();
   client->Init();
-  client->SetTimeout(10.f);
+  client->SetTimeout(2.f);
   return client;
 }
 
@@ -99,6 +99,23 @@ void executeCommand(const std::shared_ptr<LocoClient> &client,
     int fsm_id = std::stoi(val);
     client->SetFsmId(fsm_id);
     std::cout << "执行 set_fsm_id: " << fsm_id << std::endl;
+
+  } else if (cmd == "damp") {
+    std::cout << "执行 damp 开始" << std::endl;
+    auto code = client->Damp();
+    std::cout << "执行 damp 结束 " << code <<std::endl;
+
+  } else if (cmd == "stand") {
+    client->StandUp();
+    std::cout << "执行 stand" << std::endl;
+
+  }else if (cmd == "start") {
+    client->Start();
+    std::cout << "执行 start" << std::endl;
+
+  }else if (cmd == "squat") {
+    client->Start();
+    std::cout << "执行 squat" << std::endl;
 
   } else {
     throw std::runtime_error("未知命令: " + cmd);
