@@ -227,7 +227,7 @@ void State_Mimic::enter()
             }
             std::this_thread::sleep_until(sleepTill);
             sleepTill += dt;
-            if (!checked_switch) {
+            if (!checked_switch && (env->episode_length * env->step_dt) > 0.1f) { // verify switch after 0.1s
                 client.GetFsmId(current_fsm_id);
                 if (current_fsm_id != 1000) {
                     policy_thread_running = false;
