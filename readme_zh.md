@@ -39,7 +39,7 @@ python3 ./app/g1/cmd_server.py
 ### 打包
 
 ```bash
-tar -czvf your_app_name.tar.gz ./app ./ui
+tar -czvf your_app_name.tar.gz ./app
 ```
 
 之后将应用 `your_app_name.tar.gz` 上传到 UniStore 即可。

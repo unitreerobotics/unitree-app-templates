@@ -42,7 +42,7 @@ For detailed instructions, please refer to [`g1_mimic_demo/README.md`](./g1_mimi
 ### Packaging
 
 ```bash
-tar -czvf your_app_name.tar.gz ./app ./ui
+tar -czvf your_app_name.tar.gz ./app
 ```
 
 Finally, upload `your_app_name.tar.gz` to UniStore.
