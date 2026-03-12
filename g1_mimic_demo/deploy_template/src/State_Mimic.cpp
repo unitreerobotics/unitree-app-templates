@@ -200,7 +200,7 @@ void State_Mimic::enter()
 
         int current_fsm_id = 0;
         client.GetFsmId(current_fsm_id);
-        if(current_fsm_id == 801 )     // only SwitchToUserCtrl in walkrun mode,
+        if(current_fsm_id != 1 )     // only SwitchToUserCtrl in walkrun mode,
         {
             client.SwitchToUserCtrl();
         }
