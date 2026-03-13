@@ -120,8 +120,12 @@ State_Mimic::State_Mimic(int state_mode, std::string state_string)
     auto policy_dir = param::parser_policy_dir(cfg["policy_dir"].as<std::string>());
 
     std::filesystem::path motion_file = cfg["motion_file"].as<std::string>();
+    std::filesystem::path policy_file = cfg["policy_file"].as<std::string>();
     if(!motion_file.is_absolute()) {
         motion_file = param::proj_dir / motion_file;
+    }
+    if(!policy_file.is_absolute()) {
+        policy_file = param::proj_dir / policy_file;
     }
     
     // Motion
@@ -147,7 +151,7 @@ State_Mimic::State_Mimic(int state_mode, std::string state_string)
         std::make_shared<unitree::BaseArticulation<LowState_t::SharedPtr>>(FSMState::lowstate)
     );
 
-    env->alg = std::make_unique<isaaclab::OrtRunner>(policy_dir / "exported" / "gangnam_style.onnx");
+    env->alg = std::make_unique<isaaclab::OrtRunner>(policy_file);
 
     const auto & joy = FSMState::lowstate->joystick;
 
