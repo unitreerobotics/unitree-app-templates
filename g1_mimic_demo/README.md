@@ -20,8 +20,7 @@ mkdir build && cd build
 cmake .. -DBUILD_EXAMPLES=OFF # Install on the /usr/local directory
 sudo make install
 ```
-Run:  ./install.sh in a Ubuntu 20.04 ARM64 Docker environment.
-After compilation, copy the out directory into the app/g1 folder, and make sure this directory contains a startup script such as run_g1_ctrl.sh.
+Run ./docker_build_arm64.sh. After the build completes, the artifacts will be placed in the app/g1 directory; ensure this directory contains a startup script such as run_g1_ctrl.sh.
 
 ## Application Metadata
 Fill in the application metadata in metadata.yaml. Example:

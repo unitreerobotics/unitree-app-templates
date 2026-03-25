@@ -1,0 +1,41 @@
+FSM:
+  _: # enabled fsms
+    Passive:
+      id: 1
+    Velocity:
+      id: 2
+      type: RLBase
+
+    Mimic:
+      id: 3
+      type: Mimic
+
+    Exit:
+      id: 4
+
+  Passive:
+    mode: [
+      1,1,1,1,1,1,
+      1,1,1,1,1,1,
+      1,1,1,
+      1,1,1,1,1,1,1,
+      1,1,1,1,1,1,1,
+    ]
+    kd: [
+      3,3,3,3,3,3,
+      3,3,3,3,3,3,
+      3,3,3,
+      3,3,3,3,3,3,3,  
+      3,3,3,3,3,3,3,  
+    ]
+  Velocity:
+    policy_dir: config/policy/velocity
+    # policy_dir: ../../../logs/rsl_rl/unitree_g1_29dof_velocity
+  Mimic:
+    fps: 60
+    motion_file: config/policy/mimic/gangnam_style/params/G1_gangnam_style_V01.bvh_60hz.csv
+    policy_dir: config/policy/mimic/gangnam_style/
+    policy_file: config/policy/mimic/gangnam_style/exported/gangnam_style.onnx
+    time_start: 5.1
+    time_end: 25.5
+

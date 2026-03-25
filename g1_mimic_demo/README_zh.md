@@ -17,7 +17,7 @@ cmake .. -DBUILD_EXAMPLES=OFF # Install on the /usr/local directory
 sudo make install
 ```
 
-在ubuntu 20.04 arm64的docker环境中运行 ./install.sh ,编译完成后，将out目录复制到app/g1文件夹下，并确保此目录下含有run_g1_ctrl.sh此类启动脚本
+运行 ./docker_build_arm64.sh ，编译完成后，产物会存到app/g1文件夹下，并确保此目录下含有run_g1_ctrl.sh此类启动脚本
 
 ## 版本
 填写您应用程序的元数据 `metadata.yaml`，示例如下:
