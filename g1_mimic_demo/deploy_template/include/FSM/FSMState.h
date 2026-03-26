@@ -61,8 +61,12 @@ public:
 
     void post_run()
     {
-        // Only publish lowcmd in Mimic state to avoid conflicts with other apps
-        if (this->getState() == FSMStringMap.right.at("Mimic")) {
+        // Publish lowcmd once at startup, then retain original behavior (publish only in Mimic)
+        static bool startup_published = false;
+        if (lowcmd && !startup_published) {
+            lowcmd->unlockAndPublish();
+            startup_published = true;
+        } else if (lowcmd && this->getState() == FSMStringMap.right.at("Mimic")) {
             lowcmd->unlockAndPublish();
         }
         
