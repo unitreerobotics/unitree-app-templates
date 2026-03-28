@@ -23,19 +23,21 @@ sudo make install
 填写您应用程序的元数据 `metadata.yaml`，示例如下:
 ```yaml
 version: v0.1.0
-base_image: image/cpp_sdk2:latest
+base_image: image/sdk2_cpp_py:latest
 permissions:
   - camera
 build_env:
   - apt update && apt install -y python3 pip && pip install fastapi uvicorn -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 startup_commands:
-  - python3 /workspace/app/server/cmd_server.py
+  - python3 /workspace/app/g1/cmd_server.py
 change_log: |
   - 初始版本发布
 ```
 
 ## 打包
-tar -czvf your_app_name.tar.gz ./app ./ui
+```yaml
+tar -czvf your_app_name.tar.gz ./app
+```
 
 之后将应用your_app_name.tar.gz上传到 UniStore 即可

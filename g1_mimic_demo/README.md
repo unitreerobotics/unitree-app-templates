@@ -26,21 +26,21 @@ Run ./docker_build_arm64.sh. After the build completes, the artifacts will be pl
 Fill in the application metadata in metadata.yaml. Example:
 ```yaml
 version: v0.1.0
-base_image: image/cpp_sdk2:latest
+base_image: image/sdk2_cpp_py:latest
 permissions:
   - camera
 build_env:
   - apt update && apt install -y python3 pip && pip install fastapi uvicorn -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 startup_commands:
-  - python3 /workspace/app/server/cmd_server.py
+  - python3 /workspace/app/g1/cmd_server.py
 change_log: |
   - Initial release
 ```
 
 ## Pack
 ```yaml
-tar -czvf your_app_name.tar.gz ./app ./ui
+tar -czvf your_app_name.tar.gz ./app
 ```
 
 Finally, upload your_app_name.tar.gz to UniStore.
