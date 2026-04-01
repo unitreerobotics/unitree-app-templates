@@ -33,9 +33,9 @@ FSM:
     # policy_dir: ../../../logs/rsl_rl/unitree_g1_29dof_velocity
   Mimic:
     fps: 60
-    motion_file: config/policy/mimic/gangnam_style/params/G1_gangnam_style_V01.bvh_60hz.csv
-    policy_dir: config/policy/mimic/gangnam_style/
-    policy_file: config/policy/mimic/gangnam_style/exported/gangnam_style.onnx
+    motion_file: config/policy/mimic/unistore/params/G1_gangnam_style_V01.bvh_60hz.csv
+    policy_dir: config/policy/mimic/unistore/
+    policy_file: config/policy/mimic/unistore/exported/gangnam_style.onnx
     time_start: 5.1
     time_end: 25.5
 
