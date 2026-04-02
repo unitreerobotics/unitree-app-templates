@@ -217,6 +217,10 @@ void State_Mimic::enter()
 
         while (policy_thread_running)
         {
+            // reset checked_switch every second
+            if (checked_switch && env->episode_length % 50 == 0) {
+                checked_switch = false;
+            }
             env->robot->update();
             motion->update(env->episode_length * env->step_dt + time_range_[0]);
             env->step();
