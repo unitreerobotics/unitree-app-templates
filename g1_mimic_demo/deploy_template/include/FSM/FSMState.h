@@ -61,15 +61,21 @@ public:
 
     void post_run()
     {
-        // Publish lowcmd once at startup, then retain original behavior (publish only in Mimic)
-        static bool startup_published = false;
-        if (lowcmd && !startup_published) {
+        static int last_state = -1;
+        const int current_state = this->getState();
+        const bool entered_new_state = current_state != last_state;
+
+        if (lowcmd && current_state == FSMStringMap.right.at("Mimic")) {
             lowcmd->unlockAndPublish();
-            startup_published = true;
-        } else if (lowcmd && this->getState() == FSMStringMap.right.at("Mimic")) {
+        } else if (
+            lowcmd &&
+            entered_new_state &&
+            (current_state == FSMStringMap.right.at("Passive") ||
+             current_state == FSMStringMap.right.at("Exit"))) {
             lowcmd->unlockAndPublish();
         }
-        
+
+        last_state = current_state;
     }
 
     static std::unique_ptr<LowCmd_t> lowcmd;
