@@ -28,6 +28,7 @@ public:
     {
         unitree::robot::g1::LocoClient client;
         client.Init();
+        static bool first_enter = true;
         // set gain
         static auto kd = param::config["FSM"]["Passive"]["kd"].as<std::vector<float>>();
         for(int i(0); i < kd.size(); ++i)
@@ -45,7 +46,14 @@ public:
                 FSMStringMap.right.at("Mimic")
             )
         );
-        client.SwitchToInternalCtrl(unitree::robot::g1::InternalFsmMode::PASSIVE);
+        if(first_enter)
+        {
+            first_enter = false;
+        }
+        else
+        {
+            client.SwitchToInternalCtrl(unitree::robot::g1::InternalFsmMode::PASSIVE);
+        }
     }
 
     void run()
