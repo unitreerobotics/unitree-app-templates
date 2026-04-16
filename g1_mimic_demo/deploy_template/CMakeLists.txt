@@ -11,17 +11,17 @@ find_package(yaml-cpp REQUIRED)
 # aarch or x64
 string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _proc)
 if(_proc MATCHES "^(aarch64|arm64)$")
-  set(ONNX_DIR "${PROJECT_SOURCE_DIR}/third_party/aarch64/onnxruntime")
-  message(STATUS "ONNX_DIR is set to ${ONNX_DIR}")
+  set(MNN_DIR "${PROJECT_SOURCE_DIR}/third_party/aarch64/mnn")
+  message(STATUS "MNN_DIR is set to ${MNN_DIR}")
 elseif(_proc MATCHES "^(x86_64|amd64|x64)$")
-  set(ONNX_DIR "${PROJECT_SOURCE_DIR}/third_party/x64/onnxruntime")
-  message(STATUS "ONNX_DIR is set to ${ONNX_DIR}")
+  set(MNN_DIR "${PROJECT_SOURCE_DIR}/third_party/x64/mnn")
+  message(STATUS "MNN_DIR is set to ${MNN_DIR}")
 else()
   message(FATAL_ERROR "Unsupported arch: ${CMAKE_SYSTEM_PROCESSOR}. Set paths manually.")
 endif()
 
-message(STATUS "ONNX include: ${ONNX_DIR}/include")
-message(STATUS "ONNX libs: ${ONNX_DIR}/lib")
+message(STATUS "MNN include: ${MNN_DIR}/include")
+message(STATUS "MNN libs: ${MNN_DIR}/lib")
 
 # ------------------------
 # Other include dirs
@@ -31,11 +31,11 @@ include_directories(
   include
   /usr/local/include/ddsc # dds
   /usr/local/include/ddscxx # dds
-  ${ONNX_DIR}/include
+  ${MNN_DIR}/include
 )
 
 link_directories(
-  ${ONNX_DIR}/lib
+  ${MNN_DIR}/lib
 )
 
 # ------------------------
@@ -50,7 +50,7 @@ link_libraries(
   libboost_program_options.a
   libyaml-cpp.a
   fmt
-  ${ONNX_DIR}/lib/libonnxruntime.so.1.22.0
+  MNN                   # <-- 加上 MNN
 )
 
 # ------------------------
@@ -82,8 +82,10 @@ target_link_options(g1_ctrl PRIVATE
 # install
 install(TARGETS g1_ctrl RUNTIME DESTINATION bin)
 
-file(GLOB ONNX_SO "${ONNX_DIR}/lib/libonnxruntime.so*")
-install(FILES ${ONNX_SO} DESTINATION lib)
+file(GLOB MNN_SO
+  "${MNN_DIR}/lib/libMNN*.so*"
+)
+install(FILES ${MNN_SO} DESTINATION lib)
 # Install DDS shared libraries so the deployed binary can load them from ../lib
 file(GLOB DDS_SO
   /usr/local/lib/libddsc*.so*

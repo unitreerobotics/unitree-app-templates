@@ -30,6 +30,7 @@ private:
 
     std::thread policy_thread;
     bool policy_thread_running = false;
+    bool exit_mimic = false;
     std::array<float, 2> time_range_;
     unitree::robot::g1::LocoClient client;
 };
@@ -106,11 +107,28 @@ private:
     std::vector<Eigen::VectorXf> _comupte_raw_derivative(const std::vector<Eigen::VectorXf>& data)
     {
         std::vector<Eigen::VectorXf> derivative;
-        for(int i = 0; i < data.size() - 1; ++i) {
-            derivative.push_back((data[i + 1] - data[i]) / dt);
+        int N = data.size();
+
+        derivative.resize(N);
+        
+        if (N < 2) return derivative;
+        
+        for (int i = 1; i < N - 1; ++i) {
+            derivative[i] = (data[i + 1] - data[i - 1]) / (2 * dt);
         }
-        derivative.push_back(derivative.back());
-        return derivative;
+
+        derivative[0] = (data[1] - data[0]) / dt;
+        derivative[N - 1] = (data[N - 1] - data[N - 2]) / dt;
+        
+
+        std::vector<Eigen::VectorXf> smoothed(N);
+        smoothed[0] = derivative[0];
+        for (int i = 1; i < N - 1; ++i) {
+            smoothed[i] = (derivative[i - 1] + 2 * derivative[i] + derivative[i + 1]) / 4.0f;
+        }
+        smoothed[N - 1] = derivative[N - 1];
+        
+        return smoothed;
     }
 };
 

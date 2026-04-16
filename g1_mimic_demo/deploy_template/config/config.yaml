@@ -35,7 +35,7 @@ FSM:
     fps: 60
     motion_file: config/policy/mimic/unistore/params/G1_gangnam_style_V01.bvh_60hz.csv
     policy_dir: config/policy/mimic/unistore/
-    policy_file: config/policy/mimic/unistore/exported/gangnam_style.onnx
+    policy_file: config/policy/mimic/unistore/exported/gangnam_style.mnn
     time_start: 5.1
     time_end: 25.5
 

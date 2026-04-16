@@ -151,13 +151,13 @@ State_Mimic::State_Mimic(int state_mode, std::string state_string)
         std::make_shared<unitree::BaseArticulation<LowState_t::SharedPtr>>(FSMState::lowstate)
     );
 
-    env->alg = std::make_unique<isaaclab::OrtRunner>(policy_file);
+    env->alg = std::make_unique<isaaclab::MNNRunner>(policy_file);
 
     const auto & joy = FSMState::lowstate->joystick;
 
     this->registered_checks.emplace_back(
         std::make_pair(
-            [&]()->bool{ return ((env->episode_length * env->step_dt) > time_range_[1]) || !policy_thread_running; }, // time out or wrong state
+            [&]()->bool{ return ((env->episode_length * env->step_dt) > time_range_[1]) || exit_mimic; }, // time out or wrong state
             FSMStringMap.right.at("Exit")
         )
     );
@@ -172,6 +172,8 @@ State_Mimic::State_Mimic(int state_mode, std::string state_string)
 
 void State_Mimic::enter()
 {
+    lowstate->update();
+    if(keyboard) keyboard->update();
     client.Init();
     // set gain
     for (int i = 0; i < env->robot->data.joint_stiffness.size(); ++i)
@@ -187,6 +189,7 @@ void State_Mimic::enter()
     motion->reset(env->robot->data, time_range_[0]);
     // Start policy thread
     policy_thread_running = true;
+    exit_mimic = false;
     policy_thread = std::thread([this]{
         using clock = std::chrono::high_resolution_clock;
         const std::chrono::duration<double> desiredDuration(env->step_dt);
@@ -210,13 +213,16 @@ void State_Mimic::enter()
         }
         else{
             policy_thread_running = false;
+            exit_mimic = true;
             spdlog::error("Failed to switch to user control mode! Current FSM ID: {}", current_fsm_id);
-            return;
         }
         bool checked_switch = false;
 
         while (policy_thread_running)
         {
+            lowstate->update();
+            if(keyboard) keyboard->update();
+
             // reset checked_switch every second
             if (checked_switch && env->episode_length % 50 == 0) {
                 checked_switch = false;
@@ -224,8 +230,6 @@ void State_Mimic::enter()
             env->robot->update();
             motion->update(env->episode_length * env->step_dt + time_range_[0]);
             env->step();
-            std::printf("Time: %.2f / %.2f\r", env->episode_length * env->step_dt, time_range_[1]);
-            std::fflush(stdout);
 
             // // Sleep
             auto now = clock::now();
@@ -233,14 +237,20 @@ void State_Mimic::enter()
                 auto over_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - sleepTill).count();
                 spdlog::warn("Policy loop timeout: missed deadline by {} ms", over_ms);
             }
+
+            auto action = env->action_manager->latest_action();
+            for(int i(0); i < env->robot->data.joint_ids_map.size(); i++) {
+                lowcmd->msg_.motor_cmd()[env->robot->data.joint_ids_map[i]].q() = action[i];
+            }
+            lowcmd->unlockAndPublish();
+
             std::this_thread::sleep_until(sleepTill);
             sleepTill += dt;
             if (!checked_switch && (env->episode_length * env->step_dt) > 0.1f) { // verify switch after 0.1s
                 client.GetFsmId(current_fsm_id);
                 if (current_fsm_id != 1000) {
-                    policy_thread_running = false;
+                    exit_mimic = true;
                     spdlog::error("Failed to switch to user control mode! Current FSM ID: {}", current_fsm_id);
-                    return;
                 }
                 checked_switch = true;
             }
@@ -251,8 +261,5 @@ void State_Mimic::enter()
 
 void State_Mimic::run()
 {
-    auto action = env->action_manager->processed_actions();
-    for(int i(0); i < env->robot->data.joint_ids_map.size(); i++) {
-        lowcmd->msg_.motor_cmd()[env->robot->data.joint_ids_map[i]].q() = action[i];
-    }
+    
 }

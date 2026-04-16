@@ -42,7 +42,7 @@ State_RLBase::State_RLBase(int state_mode, std::string state_string)
         YAML::LoadFile(policy_dir / "params" / "deploy.yaml"),
         std::make_shared<unitree::BaseArticulation<LowState_t::SharedPtr>>(FSMState::lowstate)
     );
-    env->alg = std::make_unique<isaaclab::OrtRunner>(policy_dir / "exported" / "policy.onnx");
+    env->alg = std::make_unique<isaaclab::MNNRunner>(policy_dir / "exported" / "policy.mnn");
 
     this->registered_checks.emplace_back(
         std::make_pair(

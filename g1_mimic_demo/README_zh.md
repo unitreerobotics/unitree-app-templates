@@ -19,6 +19,24 @@ sudo make install
 
 运行 ./docker_build_arm64.sh ，编译完成后，产物会存到app/g1文件夹下，并确保此目录下含有run_g1_ctrl.sh此类启动脚本
 
+## ONNX 转 MNN
+
+如果您的策略模型当前是 `.onnx` 格式，可以先安装 MNN 转换工具，再执行模型转换：
+
+```bash
+python3 -m pip install -U MNN
+python3 -m pip install -U onnx
+MNNConvert -f ONNX --modelFile model.onnx --MNNModel model.mnn --bizCode MNN
+```
+
+其中 `model.onnx` 为输入模型，`model.mnn` 为输出模型名称，可按实际文件名替换。
+
+若安装后系统中找不到 `MNNConvert`，也可以尝试通过 Python 模块方式调用：
+
+```bash
+python3 -m MNN.tools.mnnconvert -f ONNX --modelFile model.onnx --MNNModel model.mnn --bizCode MNN
+```
+
 ## 版本
 填写您应用程序的元数据 `metadata.yaml`，示例如下:
 ```yaml

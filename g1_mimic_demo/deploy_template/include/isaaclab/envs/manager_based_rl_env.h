@@ -61,7 +61,7 @@ public:
         episode_length += 1;
         robot->update();
         auto obs = observation_manager->compute();
-        auto action = alg->act(obs);
+        const auto& action = alg->act(obs);
         action_manager->process_action(action);
     }
 

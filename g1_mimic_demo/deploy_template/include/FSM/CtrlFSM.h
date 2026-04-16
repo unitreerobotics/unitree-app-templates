@@ -77,13 +77,14 @@ public:
 
     std::vector<std::shared_ptr<BaseState>> states;
 private:
-    const double dt = 0.001;
+    const double dt = 0.05; // 20Hz
+    
 
     void run_()
     {
-        currentState->pre_run();
+        // currentState->pre_run();
         currentState->run();
-        currentState->post_run();
+        // currentState->post_run();
         
         // Check if need to change state
         int nextStateMode = 0;

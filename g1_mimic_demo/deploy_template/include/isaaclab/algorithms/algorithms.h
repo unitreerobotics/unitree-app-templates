@@ -1,9 +1,7 @@
-// Copyright (c) 2025, Unitree Robotics Co., Ltd.
-// All rights reserved.
-
 #pragma once
 
-#include "onnxruntime_cxx_api.h"
+#include <MNN/Interpreter.hpp>
+#include <filesystem>
 #include <iostream>
 #include <mutex>
 
@@ -13,7 +11,8 @@ namespace isaaclab
 class Algorithms
 {
 public:
-    virtual std::vector<float> act(std::unordered_map<std::string, std::vector<float>> obs) = 0;
+    virtual ~Algorithms() = default;
+    virtual const std::vector<float>& act(const std::unordered_map<std::string, std::vector<float>>& obs) = 0;
 
     std::vector<float> get_action()
     {
@@ -26,83 +25,134 @@ protected:
     std::mutex act_mtx_;
 };
 
-class OrtRunner : public Algorithms
+class MNNRunner : public Algorithms
 {
 public:
-    OrtRunner(std::string model_path)
+    explicit MNNRunner(const std::filesystem::path& model_path)
     {
-        // Init Model
-        env = Ort::Env(ORT_LOGGING_LEVEL_WARNING, "onnx_model");
-        session_options.SetGraphOptimizationLevel(ORT_ENABLE_EXTENDED);
-
-        session = std::make_unique<Ort::Session>(env, model_path.c_str(), session_options);
-
-        for (size_t i = 0; i < session->GetInputCount(); ++i) {
-            Ort::TypeInfo input_type = session->GetInputTypeInfo(i);
-            input_shapes.push_back(input_type.GetTensorTypeAndShapeInfo().GetShape());
-            auto input_name = session->GetInputNameAllocated(i, allocator);
-            input_names.push_back(input_name.release());
+        if (!std::filesystem::exists(model_path)) {
+            throw std::runtime_error("MNN model not found: " + model_path.string());
         }
 
-        for (const auto& shape : input_shapes) {
+        interpreter_.reset(MNN::Interpreter::createFromFile(model_path.c_str()));
+        if (!interpreter_) {
+            throw std::runtime_error("Failed to load MNN model: " + model_path.string());
+        }
+
+        MNN::ScheduleConfig config;
+        config.type = MNN_FORWARD_CPU;
+        config.numThread = 1;
+        config.backupType = MNN_FORWARD_CPU;  
+
+        session_ = interpreter_->createSession(config);
+        if (!session_) {
+            throw std::runtime_error("Failed to create MNN session for model: " + model_path.string());
+        }
+
+        const auto& session_inputs = interpreter_->getSessionInputAll(session_);
+        if (session_inputs.empty()) {
+            throw std::runtime_error("MNN model has no inputs: " + model_path.string());
+        }
+
+        for (const auto& [name, tensor] : session_inputs) {
+            input_names_.push_back(name);
+            std::vector<int> dims = tensor->shape();
+            input_shapes_.push_back(dims);
+            input_tensors_.push_back(tensor);
+
             size_t size = 1;
-            for (const auto& dim : shape) {
-                size *= dim;
+            for (const auto dim : dims) {
+                if (dim <= 0) {
+                    throw std::runtime_error("Unsupported dynamic MNN input shape for '" + name + "'.");
+                }
+                size *= static_cast<size_t>(dim);
             }
-            input_sizes.push_back(size);
+            input_sizes_.push_back(size);
+
+
+            input_host_tensors_.emplace_back(
+                std::shared_ptr<MNN::Tensor>(
+                    new MNN::Tensor(tensor, tensor->getDimensionType())
+                )
+            );
         }
 
-        // Get output shape
-        Ort::TypeInfo output_type = session->GetOutputTypeInfo(0);
-        output_shape = output_type.GetTensorTypeAndShapeInfo().GetShape();
-        auto output_name = session->GetOutputNameAllocated(0, allocator);
-        output_names.push_back(output_name.release());
+        const auto& session_outputs = interpreter_->getSessionOutputAll(session_);
+        if (session_outputs.empty()) {
+            throw std::runtime_error("MNN model has no outputs: " + model_path.string());
+        }
 
-        action.resize(output_shape[1]);
+        output_name_ = session_outputs.begin()->first;
+        output_tensor_ = session_outputs.begin()->second;
+
+
+        output_host_tensor_ = std::shared_ptr<MNN::Tensor>(
+            new MNN::Tensor(output_tensor_, output_tensor_->getDimensionType())
+        );
+
+        action.resize(static_cast<size_t>(output_tensor_->elementSize()));
     }
 
-    std::vector<float> act(std::unordered_map<std::string, std::vector<float>> obs)
+    const std::vector<float>& act(const std::unordered_map<std::string, std::vector<float>>& obs) override
     {
-        auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
-
-        // make sure all input names are in obs
-        for (const auto& name : input_names) {
-            if (obs.find(name) == obs.end()) {
-                throw std::runtime_error("Input name " + std::string(name) + " not found in observations.");
+        const bool single_input = input_names_.size() == 1;
+        for (size_t i = 0; i < input_names_.size(); ++i) {
+            const auto& input_name = input_names_[i];
+            auto obs_it = obs.find(input_name);
+            if (obs_it == obs.end() && single_input && obs.size() == 1) {
+                obs_it = obs.begin();
             }
+            if (obs_it == obs.end()) {
+                throw std::runtime_error("Input name '" + input_name + "' not found in observations.");
+            }
+
+            auto& input_data = obs_it->second;
+            if (input_data.size() != input_sizes_[i]) {
+                throw std::runtime_error(
+                    "Observation size mismatch for input '" + input_name + "': got " +
+                    std::to_string(input_data.size()) + ", expected " + std::to_string(input_sizes_[i]));
+            }
+
+
+            auto& host_tensor = *input_host_tensors_[i];
+            std::memcpy(host_tensor.host<float>(), input_data.data(), input_data.size() * sizeof(float));
+            input_tensors_[i]->copyFromHostTensor(&host_tensor);
         }
 
-        // Create input tensors
-        std::vector<Ort::Value> input_tensors;
-        for(int i(0); i<input_names.size(); ++i)
-        {
-            const std::string name_str(input_names[i]);
-            auto& input_data = obs.at(name_str);
-            auto input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_data.data(), input_sizes[i], input_shapes[i].data(), input_shapes[i].size());
-            input_tensors.push_back(std::move(input_tensor));
+        if (interpreter_->runSession(session_) != MNN::NO_ERROR) {
+            throw std::runtime_error("Failed to run MNN session.");
         }
 
-        // Run the model
-        auto output_tensor = session->Run(Ort::RunOptions{nullptr}, input_names.data(), input_tensors.data(), input_tensors.size(), output_names.data(), 1);
+        output_tensor_->copyToHostTensor(output_host_tensor_.get());
 
-        // Copy output data
-        auto floatarr = output_tensor.front().GetTensorMutableData<float>();
+        const auto output_size = static_cast<size_t>(output_host_tensor_->elementSize());
         std::lock_guard<std::mutex> lock(act_mtx_);
-        std::memcpy(action.data(), floatarr, output_shape[1] * sizeof(float));
+        std::memcpy(action.data(), output_host_tensor_->host<float>(), output_size * sizeof(float));
         return action;
     }
 
 private:
-    Ort::Env env;
-    Ort::SessionOptions session_options;
-    std::unique_ptr<Ort::Session> session;
-    Ort::AllocatorWithDefaultOptions allocator;
+    struct InterpreterDeleter {
+        void operator()(MNN::Interpreter* interpreter) const
+        {
+            if (interpreter) {
+                MNN::Interpreter::destroy(interpreter);
+            }
+        }
+    };
 
-    std::vector<const char*> input_names;
-    std::vector<const char*> output_names;
+    std::unique_ptr<MNN::Interpreter, InterpreterDeleter> interpreter_;
+    MNN::Session* session_ = nullptr;
 
-    std::vector<std::vector<int64_t>> input_shapes;
-    std::vector<int64_t> input_sizes;
-    std::vector<int64_t> output_shape;
+    std::vector<std::string> input_names_;
+    std::vector<std::vector<int>> input_shapes_;
+    std::vector<size_t> input_sizes_;
+    std::vector<MNN::Tensor*> input_tensors_;
+    std::string output_name_;
+    MNN::Tensor* output_tensor_ = nullptr;
+
+    std::vector<std::shared_ptr<MNN::Tensor>> input_host_tensors_;
+    std::shared_ptr<MNN::Tensor> output_host_tensor_;
 };
+
 };

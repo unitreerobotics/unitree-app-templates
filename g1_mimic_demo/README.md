@@ -22,6 +22,24 @@ sudo make install
 ```
 Run ./docker_build_arm64.sh. After the build completes, the artifacts will be placed in the app/g1 directory; ensure this directory contains a startup script such as run_g1_ctrl.sh.
 
+## ONNX to MNN
+
+If your policy model is currently in `.onnx` format, install the MNN converter first and then run the conversion:
+
+```bash
+python3 -m pip install -U MNN
+python3 -m pip install -U onnx
+MNNConvert -f ONNX --modelFile model.onnx --MNNModel model.mnn --bizCode MNN
+```
+
+Here, `model.onnx` is the input model and `model.mnn` is the output model name. Replace them with your actual filenames as needed.
+
+If `MNNConvert` is not found after installation, you can also try invoking it through the Python module entry point:
+
+```bash
+python3 -m MNN.tools.mnnconvert -f ONNX --modelFile model.onnx --MNNModel model.mnn --bizCode MNN
+```
+
 ## Application Metadata
 Fill in the application metadata in metadata.yaml. Example:
 ```yaml
