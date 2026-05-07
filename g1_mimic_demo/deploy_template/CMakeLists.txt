@@ -13,6 +13,10 @@ string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _proc)
 if(_proc MATCHES "^(aarch64|arm64)$")
   set(MNN_DIR "${PROJECT_SOURCE_DIR}/third_party/aarch64/mnn")
   message(STATUS "MNN_DIR is set to ${MNN_DIR}")
+  add_compile_options(
+      -march=armv8.2-a+simd+fp16+dotprod+crc+crypto
+      -O3
+  )
 elseif(_proc MATCHES "^(x86_64|amd64|x64)$")
   set(MNN_DIR "${PROJECT_SOURCE_DIR}/third_party/x64/mnn")
   message(STATUS "MNN_DIR is set to ${MNN_DIR}")
