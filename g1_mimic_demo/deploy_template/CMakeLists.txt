@@ -54,7 +54,7 @@ link_libraries(
   libboost_program_options.a
   libyaml-cpp.a
   fmt
-  MNN                   # <-- 加上 MNN
+  MNN                   # <-- Add MNN
 )
 
 # ------------------------
