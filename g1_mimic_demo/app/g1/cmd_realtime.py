@@ -1,11 +1,11 @@
 import subprocess, threading, queue
 from config import *
-# 全局实时进程与输出队列
+# Global realtime process and output queue
 realtime_proc = None
 output_queue = queue.Queue()
 
 def print_output_realtime():
-    """后台线程，持续打印子进程输出"""
+    """Continuously print subprocess output in a background thread."""
     def printer():
         while True:
             if realtime_proc and realtime_proc.poll() is None:
@@ -17,10 +17,10 @@ def print_output_realtime():
     threading.Thread(target=printer, daemon=True).start()
     
 def start_realtime(cmd_args):
-    """启动实时模式子进程"""
+    """Start the subprocess in realtime mode."""
     global realtime_proc, output_queue
     if realtime_proc and realtime_proc.poll() is None:
-        return  # 已经在运行
+        return  # Already running
 
     output_queue = queue.Queue()
     realtime_proc = subprocess.Popen(
@@ -37,7 +37,7 @@ def start_realtime(cmd_args):
 
 
 # def send_input_realtime(cmd_args):
-#     """向实时进程发送一次性输入"""
+#     """Send input to the realtime process in a single write."""
 #     global realtime_proc
 #     if not realtime_proc or realtime_proc.poll() is not None:
 #         start_realtime(cmd_args)
@@ -45,7 +45,7 @@ def start_realtime(cmd_args):
 #     realtime_proc.stdin.flush()
 import time
 def send_input_realtime(cmd_args):
-    """向实时进程发送输入 (逐个字符)"""
+    """Send input to the realtime process one character at a time."""
     global realtime_proc
     if not realtime_proc or realtime_proc.poll() is not None:
         start_realtime(cmd_args)
@@ -54,7 +54,7 @@ def send_input_realtime(cmd_args):
     for char in input_string:
         realtime_proc.stdin.write(char)
         realtime_proc.stdin.flush()
-        # 增加一个小的延迟，以模拟人类的打字速度，防止进程被数据淹没
+        # Add a short delay to simulate human typing and avoid overwhelming the process.
         time.sleep(0.01) 
         
 def read_output():

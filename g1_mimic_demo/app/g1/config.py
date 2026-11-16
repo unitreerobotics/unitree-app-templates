@@ -1,4 +1,4 @@
-# 执行文件
+# Executable file
 
 EXECUTABLE_BIN = "/workspace/app/g1/run_g1_ctrl.sh"
 

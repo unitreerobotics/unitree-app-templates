@@ -37,7 +37,7 @@ def run_cmd(cmd, args):
 
         return {"error": str(e)}
 
-# ========== 1. 原始 execute 接口 ==========
+# ========== 1. Original execute endpoint ==========
 @app.post("/api/command")
 async def execute(request: Request):
     data = await request.json()
@@ -47,7 +47,7 @@ async def execute(request: Request):
 async def get_options():
     return {"options": OPTIONS}
 
-# ========== 3. 按选项执行 ==========
+# ========== 3. Execute by option ==========
 @app.post("/api/execute")
 async def api_execute(request: Request):
     data = await request.json()
@@ -55,15 +55,15 @@ async def api_execute(request: Request):
 
     option = next((o for o in OPTIONS if o["id"] == action_id), None)
     if not option:
-        return {"error": f"未知动作 id={action_id}"}
+        return {"error": f"Unknown action id={action_id}"}
 
     if REALTIME:
-        # 内部实时模式处理
+        # Handle realtime mode internally
         send_input_realtime([option["cmd"]] + option["args"])
         output = read_output()
         return {"status": "realtime_sent", "stdout": output}
     else:
-        # 一次性执行
+        # One-shot execution
         return run_cmd(option["cmd"], option["args"])
 
 @app.post('/api/action/start')
@@ -72,7 +72,7 @@ async def api_execute_start(request: Request):
 
     option = next((o for o in OPTIONS if o["id"] == action_id), None)
     if not option:
-        return {"error": f"未知动作 id={action_id}"}
+        return {"error": f"Unknown action id={action_id}"}
 
     if REALTIME:
         send_input_realtime([option["cmd"]] + option["args"])
@@ -87,7 +87,7 @@ async def api_execute_stop(request: Request):
 
     option = next((o for o in OPTIONS if o["id"] == action_id), None)
     if not option:
-        return {"error": f"未知动作 id={action_id}"}
+        return {"error": f"Unknown action id={action_id}"}
 
     if REALTIME:
         send_input_realtime([option["cmd"]] + option["args"])
@@ -95,7 +95,7 @@ async def api_execute_stop(request: Request):
         return {"status": "realtime_sent", "stdout": output}
     else:
         return run_cmd(option["cmd"], option["args"])
-# 静态页面
+# Static page
 # app.mount("/ui", StaticFiles(directory="ui"), name="ui")
 
 if __name__ == '__main__':
